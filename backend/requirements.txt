@@ -1,8 +1,8 @@
 flask
 flask-cors
+gunicorn
 pymongo
 google-generativeai
-gunicorn
 
 # File parsing
 pdfplumber
@@ -10,6 +10,10 @@ python-docx
 pillow
 pytesseract
 pdf2image
+lxml
 
 # Utils
 requests
+python-dotenv
+tqdm
+google-api-python-client
