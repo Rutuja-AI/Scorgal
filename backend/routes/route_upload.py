@@ -1,5 +1,5 @@
-import os, re, base64, io, json
-import pdfplumber, pytesseract
+import os, re, io
+import pdfplumber
 from flask import Blueprint, request, jsonify, current_app
 from werkzeug.utils import secure_filename
 from pdf2image import convert_from_path
@@ -11,19 +11,17 @@ import google.generativeai as genai
 from key_manager import GeminiKeyManager
 
 # ------------------ Config ------------------
-# Point pytesseract to installed binary (Windows)
-pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
-
-# Uploads folder
 UPLOAD_FOLDER = os.path.join(os.getcwd(), "uploads")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# Clause splitting config
 MAX_CLAUSE_LENGTH = 1000
 MIN_CLAUSE_LENGTH = 40
 
 upload_bp = Blueprint("upload", __name__)
-summ_keys = GeminiKeyManager("GEMINI_KEYS")  # reuse analysis pool for summary
+
+# Different key managers
+summ_keys = GeminiKeyManager("GEMINI_KEYS")        # summaries + analysis
+ocr_keys = GeminiKeyManager("GEMINI_KEYS_OCR")     # OCR dedicated pool
 
 # ------------------ Helpers ------------------
 
@@ -119,20 +117,28 @@ def split_into_clauses(text: str):
 
     return results
 
-def extract_text_from_image(path_or_bytes):
+def gemini_ocr(image_path: str) -> str:
+    """Extract text from scanned images or PDFs using Gemini Vision API (OCR keys)."""
     try:
-        if isinstance(path_or_bytes, bytes):
-            print("[DEBUG] OCR: Processing pasted image bytes")
-            image = Image.open(io.BytesIO(path_or_bytes))
-        else:
-            print(f"[DEBUG] OCR: Opening file {path_or_bytes}")
-            image = Image.open(path_or_bytes)
-        text = pytesseract.image_to_string(image, lang="eng")
-        print(f"[DEBUG] OCR raw output: {repr(text[:200])}")
-        return clean_text(text)
+        api_key = ocr_keys.get_key()  # ✅ use OCR pool
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel("gemini-1.5-flash")
+
+        with open(image_path, "rb") as f:
+            image_bytes = f.read()
+
+        response = model.generate_content([
+            {"mime_type": "image/png", "data": image_bytes},
+            "Extract all readable text from this legal/official document image."
+        ])
+
+        if response and response.text:
+            print(f"[OCR] Gemini extracted {len(response.text)} chars")
+            return clean_text(response.text)
+
     except Exception as e:
-        print(f"[ERROR] OCR failed: {e}")
-        return ""
+        print(f"[ERROR] Gemini OCR failed: {e}")
+    return ""
 
 def generate_summary(text: str) -> str:
     """Use Gemini to generate a short summary of the doc."""
@@ -171,22 +177,24 @@ def upload_file():
             text = ""
 
         if not text.strip():
-            print("[WARN] pdfplumber found no text → using OCR fallback")
+            print("[WARN] pdfplumber found no text → using Gemini OCR fallback")
             try:
                 POPPLER_PATH = r"C:\Users\RUTUJA\Downloads\Release-25.07.0-0\poppler-25.07.0\Library\bin"
                 images = convert_from_path(filepath, poppler_path=POPPLER_PATH)
                 for img in images:
-                    text += pytesseract.image_to_string(img, lang="eng")
-                print(f"[UPLOAD] OCR fallback extracted {len(text)} chars")
+                    img_path = os.path.join(UPLOAD_FOLDER, "temp_page.png")
+                    img.save(img_path, "PNG")
+                    text += gemini_ocr(img_path)
+                print(f"[UPLOAD] Gemini OCR extracted {len(text)} chars")
             except Exception as e:
-                print(f"[ERROR] OCR fallback failed: {e}")
+                print(f"[ERROR] Gemini OCR fallback failed: {e}")
 
     elif filename.lower().endswith(".docx"):
         doc = Document(filepath)
         text = "\n".join([p.text for p in doc.paragraphs])
 
     elif filename.lower().endswith((".png", ".jpg", ".jpeg")):
-        text = extract_text_from_image(filepath)
+        text = gemini_ocr(filepath)
 
     else:
         return jsonify({"error": "Unsupported file type"}), 400

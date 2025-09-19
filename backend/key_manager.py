@@ -9,8 +9,9 @@ class GeminiKeyManager:
         """
         Initialize a key manager for a given env var.
         Example:
-            GeminiKeyManager("GEMINI_KEYS")      # analysis
-            GeminiKeyManager("GEMINI_KEYS_CHAT") # chatbot
+            GeminiKeyManager("GEMINI_KEYS")       # analysis
+            GeminiKeyManager("GEMINI_KEYS_CHAT")  # chatbot
+            GeminiKeyManager("GEMINI_KEYS_OCR")   # OCR
         """
         keys_str = os.getenv(env_var)
         if not keys_str:
