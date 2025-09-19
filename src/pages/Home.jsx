@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 function Home() {
   return (
     <div className="bg-gradient-to-br from-gray-100 via-slate-200 to-gray-300 min-h-screen relative overflow-hidden font-sans">
@@ -51,12 +53,13 @@ function Home() {
             </div>
           </div>
 
-          <a
-            href="/assistant"
+          {/* 🔹 Button updated to Link */}
+          <Link
+            to="/assistant"
             className="inline-block px-10 py-4 bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 text-white font-bold text-lg rounded-2xl shadow-lg hover:scale-105 transition-transform"
           >
             Try Clause Chatbot →
-          </a>
+          </Link>
         </div>
       </section>
 
@@ -116,12 +119,13 @@ function Home() {
             Get instant explanations and clarity with SCORGAL’s AI-powered assistant.
           </p>
 
-          <a
-            href="/assistant"
+          {/* 🔹 Button updated to Link */}
+          <Link
+            to="/assistant"
             className="inline-block px-10 py-4 bg-white text-purple-700 font-bold text-lg rounded-2xl shadow hover:scale-105 transition-transform"
           >
             Go to Assistant →
-          </a>
+          </Link>
         </div>
       </section>
     </div>
