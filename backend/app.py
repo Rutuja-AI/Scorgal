@@ -34,10 +34,10 @@ from routes.route_analyze import analyze_bp
 from routes.route_chat import chat_bp   # 👈 NEW
 from routes.route_chat_global import chat_global_bp
 
-app.register_blueprint(upload_bp)
-app.register_blueprint(analyze_bp)
-app.register_blueprint(chat_bp)
-app.register_blueprint(chat_global_bp)
+app.register_blueprint(upload_bp, url_prefix="/api")
+app.register_blueprint(analyze_bp, url_prefix="/api")
+app.register_blueprint(chat_bp, url_prefix="/api")
+app.register_blueprint(chat_global_bp, url_prefix="/api")
 
 # Make db available in blueprints
 app.clauses_collection = clauses_collection

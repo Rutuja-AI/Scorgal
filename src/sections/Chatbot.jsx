@@ -13,7 +13,7 @@ export default function Chatbot({ clause, summary, messages, setMessages }) {
     setLoading(true);
 
     try {
-      const res = await fetch("https://scorgal.onrender.com/chat_clause", {
+      const res = await fetch("https://scorgal.onrender.com/api/chat_clause", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -43,7 +43,7 @@ export default function Chatbot({ clause, summary, messages, setMessages }) {
 
   const resetChat = async () => {
     try {
-      await fetch("https://scorgal.onrender.com/reset_chat", { method: "POST" });
+      await fetch("https://scorgal.onrender.com/api/reset_chat", { method: "POST" });
       setMessages([]); // clear parent state
       setInput("");
     } catch (err) {

@@ -13,7 +13,7 @@ export default function GlobalChatbot({ messages, setMessages }) {
     setLoading(true);
 
     try {
-      const res = await fetch("https://scorgal.onrender.com/chat_doc", {
+  const res = await fetch("https://scorgal.onrender.com/api/chat_doc", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: userInput }),

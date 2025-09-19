@@ -12,7 +12,7 @@ export default function UploadBox({ onUpload, onReset, onStart }) {
     formData.append("file", file);
 
     try {
-      const res = await fetch("https://scorgal.onrender.com/upload", {
+      const res = await fetch("https://scorgal.onrender.com/api/upload", {
         method: "POST",
         body: formData,
       });
