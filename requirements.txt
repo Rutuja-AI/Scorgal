@@ -1,0 +1,15 @@
+flask
+flask-cors
+pymongo
+google-generativeai
+gunicorn
+
+# File parsing
+pdfplumber
+python-docx
+pillow
+pytesseract
+pdf2image
+
+# Utils
+requests
