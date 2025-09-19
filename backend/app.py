@@ -8,11 +8,12 @@ app = Flask(__name__)
 # ✅ Enable CORS
 CORS(
     app,
-    resources={r"/*": {"origins": "*"}},
+    resources={r"/*": {"origins": "https://scorgal.vercel.app"}},
     supports_credentials=True,
     allow_headers=["Content-Type", "Authorization"],
     methods=["GET", "POST", "OPTIONS"]
 )
+
 
 # ✅ Global cache
 app.doc_cache = {
