@@ -56,7 +56,7 @@ export default function Sidebar({
       return;
     }
     try {
-      const res = await fetch("http://127.0.0.1:5000/analyze_clause", {
+      const res = await fetch("https://scorgal.onrender.com/analyze_clause", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -116,8 +116,8 @@ export default function Sidebar({
       if (clearGlobalChat) clearGlobalChat();
 
       // 4. Clear backend cache + chat memory
-      await fetch("http://127.0.0.1:5000/clear_cache", { method: "POST" });
-      await fetch("http://127.0.0.1:5000/reset_chat", { method: "POST" });
+      await fetch("https://scorgal.onrender.com/clear_cache", { method: "POST" });
+      await fetch("https://scorgal.onrender.com/reset_chat", { method: "POST" });
 
       alert("✅ Everything reset! Fresh start.");
     } catch (err) {
@@ -128,7 +128,7 @@ export default function Sidebar({
 
   const handleClearCache = async () => {
     try {
-      await fetch("http://127.0.0.1:5000/clear_cache", { method: "POST" });
+      await fetch("https://scorgal.onrender.com/clear_cache", { method: "POST" });
       localStorage.removeItem("scorgal_doc");
       setClauses([]);
       setDocType("Unknown");

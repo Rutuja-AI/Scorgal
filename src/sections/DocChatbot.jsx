@@ -13,7 +13,7 @@ export default function DocChatbot({ messages, setMessages, onClose }) {
     setLoading(true);
 
     try {
-      const res = await fetch("http://127.0.0.1:5000/chat_doc", {
+      const res = await fetch("https://scorgal.onrender.com/chat_doc", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: userInput }),
@@ -39,7 +39,7 @@ export default function DocChatbot({ messages, setMessages, onClose }) {
 
   const resetChat = async () => {
     try {
-      await fetch("http://127.0.0.1:5000/reset_chat", { method: "POST" });
+      await fetch("https://scorgal.onrender.com/reset_chat", { method: "POST" });
       setMessages([]); // clear parent state
       setInput("");
     } catch (err) {
