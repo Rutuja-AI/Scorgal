@@ -26,16 +26,18 @@ ocr_keys = GeminiKeyManager("GEMINI_KEYS_OCR")     # OCR dedicated pool
 # ------------------ Helpers ------------------
 
 def clean_text(text: str) -> str:
+    """Normalize extracted text for consistency."""
     text = re.sub(r'\s+', ' ', text)
-    text = re.sub(r'-\s+', '', text)
-    text = re.sub(r'Illustration.*LegalDesk.*', '', text, flags=re.I)
+    text = re.sub(r'-\s+', '', text)  # join broken words
+    text = re.sub(r'Illustration.*LegalDesk.*', '', text, flags=re.I)  # remove watermark
     return text.strip()
 
 def is_valid_clause(t: str) -> bool:
+    """Check if a chunk looks like a real legal clause."""
     t = t.strip()
     if len(t) < MIN_CLAUSE_LENGTH:
         return False
-    if re.fullmatch(r'[\d\W]+', t):
+    if re.fullmatch(r'[\d\W]+', t):  # only numbers/symbols
         return False
     keywords = ["shall", "means", "agreement", "party", "term", "license"]
     if not any(k in t.lower() for k in keywords):
@@ -44,32 +46,34 @@ def is_valid_clause(t: str) -> bool:
 
 def split_into_clauses(text: str, max_chars: int = 750):
     """
-    Simple sequential splitter:
-    - Reads every line until the end.
-    - Splits when buffer > max_chars or line ends with '.'.
-    - Guarantees multiple readable chunks.
+    Split text into smaller readable clauses:
+    - Break on '.', ';', or ':' followed by a capital letter.
+    - Enforce max_chars per chunk.
     """
-    lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
+    parts = re.split(r'(?<=[.;:])\s+(?=[A-Z])', text)
+
     buffer = ""
     results = []
     counter = 1
 
-    for line in lines:
-        buffer += " " + line
+    for part in parts:
+        if not part.strip():
+            continue
+        buffer += " " + part.strip()
 
-        if len(buffer) >= max_chars or line.endswith("."):
-            results.append({
-                "id": f"clause_{counter}",
-                "label": buffer[:80],
-                "original": buffer.strip(),
-                "explanation": "Explanation pending...",
-                "risk": "Risk pending..."
-            })
+        if len(buffer) >= max_chars:
+            if is_valid_clause(buffer):
+                results.append({
+                    "id": f"clause_{counter}",
+                    "label": buffer[:80],
+                    "original": buffer.strip(),
+                    "explanation": "Explanation pending...",
+                    "risk": "Risk pending..."
+                })
+                counter += 1
             buffer = ""
-            counter += 1
 
-    # leftover
-    if buffer.strip():
+    if buffer.strip() and is_valid_clause(buffer):
         results.append({
             "id": f"clause_{counter}",
             "label": buffer[:80],
