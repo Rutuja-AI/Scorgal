@@ -1,4 +1,4 @@
-import os, re, io
+import os, re
 import pdfplumber
 from flask import Blueprint, request, jsonify, current_app
 from werkzeug.utils import secure_filename
@@ -52,8 +52,7 @@ def split_into_clauses(text: str, max_chars: int = 750):
     """
     parts = re.split(r'(?<=[.;:])\s+(?=[A-Z])', text)
 
-    buffer = ""
-    results = []
+    buffer, results = "", []
     counter = 1
 
     for part in parts:
@@ -125,7 +124,10 @@ def generate_summary(text: str) -> str:
 
 @upload_bp.route("/upload", methods=["POST"])
 def upload_file():
-    file = request.files["file"]
+    file = request.files.get("file")
+    if not file:
+        return jsonify({"error": "No file uploaded"}), 400
+
     filename = secure_filename(file.filename)
     filepath = os.path.join(UPLOAD_FOLDER, filename)
     file.save(filepath)
@@ -134,21 +136,23 @@ def upload_file():
 
     text = ""
 
+    # --- PDF Handling ---
     if filename.lower().endswith(".pdf"):
         try:
             with pdfplumber.open(filepath) as pdf:
                 for page in pdf.pages:
-                    text += page.extract_text() or ""
+                    page_text = page.extract_text() or ""
+                    text += page_text + "\n"
             print(f"[UPLOAD] PDF (plumber) extracted {len(text)} chars")
         except Exception as e:
             print(f"[ERROR] pdfplumber failed: {e}")
             text = ""
 
+        # If no text → try OCR (Linux safe)
         if not text.strip():
             print("[WARN] pdfplumber found no text → using Gemini OCR fallback")
             try:
-                POPPLER_PATH = r"C:\Users\RUTUJA\Downloads\Release-25.07.0-0\poppler-25.07.0\Library\bin"
-                images = convert_from_path(filepath, poppler_path=POPPLER_PATH)
+                images = convert_from_path(filepath)  # no hardcoded path
                 for img in images:
                     img_path = os.path.join(UPLOAD_FOLDER, "temp_page.png")
                     img.save(img_path, "PNG")
@@ -157,10 +161,12 @@ def upload_file():
             except Exception as e:
                 print(f"[ERROR] Gemini OCR fallback failed: {e}")
 
+    # --- DOCX Handling ---
     elif filename.lower().endswith(".docx"):
         doc = Document(filepath)
         text = "\n".join([p.text for p in doc.paragraphs])
 
+    # --- Image Handling ---
     elif filename.lower().endswith((".png", ".jpg", ".jpeg")):
         text = gemini_ocr(filepath)
 
@@ -170,6 +176,7 @@ def upload_file():
     text = clean_text(text)
     print(f"[UPLOAD] Extracted raw text length: {len(text)} chars")
 
+    # Fallback if no text
     if not text.strip():
         print("[WARN] No text found → returning dummy clause for fallback")
         clauses = [{
@@ -182,9 +189,8 @@ def upload_file():
         current_app.doc_cache = {"filename": filename, "clauses": clauses, "summary": ""}
         return jsonify({"doc_type": "Image", "clauses": clauses, "summary": ""})
 
+    # Split & summarize
     clauses = split_into_clauses(text)
-
-    # ✅ generate summary
     summary = generate_summary(text)
 
     current_app.doc_cache = {"filename": filename, "clauses": clauses, "summary": summary}
