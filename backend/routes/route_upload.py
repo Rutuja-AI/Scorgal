@@ -81,6 +81,45 @@ def split_into_clauses(text: str, max_chars: int = 500):
     print(f"[UPLOAD] Sequential read → {len(results)} chunks")
     return results
 
+    """
+    Sequential reader: goes line by line until the last line of the PDF.
+    Ensures nothing is skipped, even if formatting is messy.
+    Splits into chunks when reaching max_chars or at a sentence end.
+    """
+
+    lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
+    buffer = ""
+    results = []
+    counter = 1
+
+    for line in lines:
+        buffer += " " + line
+
+        # Flush if buffer is long enough OR line ends a sentence
+        if len(buffer) >= max_chars or line.endswith("."):
+            results.append({
+                "id": f"clause_{counter}",
+                "label": buffer[:80],
+                "original": buffer.strip(),
+                "explanation": "Explanation pending...",
+                "risk": "Risk pending..."
+            })
+            buffer = ""
+            counter += 1
+
+    # Flush any leftover at the end
+    if buffer.strip():
+        results.append({
+            "id": f"clause_{counter}",
+            "label": buffer[:80],
+            "original": buffer.strip(),
+            "explanation": "Explanation pending...",
+            "risk": "Risk pending..."
+        })
+
+    print(f"[UPLOAD] Sequential read → {len(results)} chunks")
+    return results
+
     lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
     results = []
     counter = 1
