@@ -116,8 +116,8 @@ export default function Sidebar({
       if (clearGlobalChat) clearGlobalChat();
 
       // 4. Clear backend cache + chat memory
-  await fetch("https://scorgal.onrender.com/api/clear_cache", { method: "POST" });
-  await fetch("https://scorgal.onrender.com/api/reset_chat", { method: "POST" });
+      await fetch("https://scorgal.onrender.com/api/clear_cache", { method: "POST" });
+      await fetch("https://scorgal.onrender.com/api/reset_chat", { method: "POST" });
 
       alert("✅ Everything reset! Fresh start.");
     } catch (err) {
@@ -128,7 +128,7 @@ export default function Sidebar({
 
   const handleClearCache = async () => {
     try {
-  await fetch("https://scorgal.onrender.com/api/clear_cache", { method: "POST" });
+      await fetch("https://scorgal.onrender.com/api/clear_cache", { method: "POST" });
       localStorage.removeItem("scorgal_doc");
       setClauses([]);
       setDocType("Unknown");
@@ -233,7 +233,14 @@ export default function Sidebar({
             }`}
             onClick={() => handleClick(c, idx)}
           >
-            {c.label || "📜 Untitled Clause"}
+            <p
+              className={`text-sm ${
+                activeIdx === idx ? "text-white" : "text-gray-800"
+              } overflow-hidden text-ellipsis line-clamp-2`}
+              title={c.label}
+            >
+              {c.label || "📜 Untitled Clause"}
+            </p>
           </div>
         ))
       )}
