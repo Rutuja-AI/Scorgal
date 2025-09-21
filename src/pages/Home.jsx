@@ -1,6 +1,16 @@
+import { useEffect } from "react";
 import { Link } from "react-router-dom";
 
 function Home() {
+  useEffect(() => {
+    // 🧹 Clear any stored data whenever SCORGAL Home loads
+    localStorage.clear();
+    sessionStorage.clear();
+
+    // (optional) also reset scroll position
+    window.scrollTo(0, 0);
+  }, []);
+
   return (
     <div className="bg-gradient-to-br from-gray-100 via-slate-200 to-gray-300 min-h-screen relative overflow-hidden font-sans">
       

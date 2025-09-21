@@ -1,4 +1,4 @@
-from flask import Flask, send_from_directory
+from flask import Flask, send_from_directory, request, current_app
 from flask_cors import CORS
 from pymongo import MongoClient
 import os
@@ -14,7 +14,6 @@ CORS(
     methods=["GET", "POST", "OPTIONS"]
 )
 
-
 # ✅ Global cache
 app.doc_cache = {
     "filename": None,
@@ -28,19 +27,30 @@ client = MongoClient(mongo_uri)
 db = client["scorgal"]
 clauses_collection = db["clauses"]
 
+# Make db available in blueprints
+app.clauses_collection = clauses_collection
+
+# ✅ Reset cache whenever Home (/) or Assistant (/assistant) is visited
+@app.before_request
+def reset_cache_on_entry():
+    if request.path in ["/", "/assistant", ""]:
+        current_app.doc_cache = {
+            "filename": None,
+            "clauses": {},
+            "summary": None
+        }
+        print(f"[DEBUG] Cache reset on visit to {request.path}")
+
 # ✅ Import routes after attaching cache + db
 from routes.route_upload import upload_bp
 from routes.route_analyze import analyze_bp
-from routes.route_chat import chat_bp   # 👈 NEW
+from routes.route_chat import chat_bp
 from routes.route_chat_global import chat_global_bp
 
 app.register_blueprint(upload_bp, url_prefix="/api")
 app.register_blueprint(analyze_bp, url_prefix="/api")
 app.register_blueprint(chat_bp, url_prefix="/api")
 app.register_blueprint(chat_global_bp, url_prefix="/api")
-
-# Make db available in blueprints
-app.clauses_collection = clauses_collection
 
 # ✅ Serve frontend (dist folder)
 @app.route("/", defaults={"path": ""})
