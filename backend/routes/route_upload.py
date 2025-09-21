@@ -41,7 +41,47 @@ def is_valid_clause(t: str) -> bool:
     if not any(k in t.lower() for k in keywords):
         return False
     return True
-def split_into_clauses(text: str, max_chars: int = 500):
+
+def split_into_clauses(text: str, max_chars: int = 750):
+    """
+    Simple sequential splitter:
+    - Reads every line until the end.
+    - Splits when buffer > max_chars or line ends with '.'.
+    - Guarantees multiple readable chunks.
+    """
+
+    lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
+    buffer = ""
+    results = []
+    counter = 1
+
+    for line in lines:
+        buffer += " " + line
+
+        if len(buffer) >= max_chars or line.endswith("."):
+            results.append({
+                "id": f"clause_{counter}",
+                "label": buffer[:80],
+                "original": buffer.strip(),
+                "explanation": "Explanation pending...",
+                "risk": "Risk pending..."
+            })
+            buffer = ""
+            counter += 1
+
+    # leftover
+    if buffer.strip():
+        results.append({
+            "id": f"clause_{counter}",
+            "label": buffer[:80],
+            "original": buffer.strip(),
+            "explanation": "Explanation pending...",
+            "risk": "Risk pending..."
+        })
+
+    print(f"[UPLOAD] Clauses generated: {len(results)}")
+    return results
+
     """
     Sequential reader: goes line by line until the last line of the PDF.
     Ensures nothing is skipped, even if formatting is messy.
