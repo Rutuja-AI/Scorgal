@@ -44,7 +44,8 @@ export default function Assistant() {
       {/* Right side */}
       <div className="flex-1 flex flex-col">
         <div className="flex-1 p-8 overflow-y-auto">
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-violet-100 h-full p-6">
+          {/* 🟢 FIX: removed h-full so ClauseView expands with content */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-violet-100 p-6">
             <ClauseView
               clause={selectedClause}
               lang={selectedLang}
@@ -125,7 +126,7 @@ export default function Assistant() {
                   </button>
                 </div>
 
-                {/* Global Chatbot (already has its own input bar) */}
+                {/* Global Chatbot */}
                 <div className="flex-1 overflow-auto">
                   <GlobalChatbot
                     messages={globalChatMessages}
