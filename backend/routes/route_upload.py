@@ -42,7 +42,45 @@ def is_valid_clause(t: str) -> bool:
         return False
     return True
 
-def split_into_clauses(text: str):
+def split_into_clauses(text: str, lines_per_chunk: int = 10):
+    lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
+    results = []
+    counter = 1
+    buffer = []
+
+    for i, line in enumerate(lines, 1):
+        buffer.append(line)
+
+        # Condition to flush: every N lines OR line ends with "."
+        if (i % lines_per_chunk == 0) or line.endswith("."):
+            chunk = " ".join(buffer).strip()
+            buffer = []
+
+            if len(chunk) >= MIN_CLAUSE_LENGTH:
+                results.append({
+                    "id": f"clause_{counter}",
+                    "label": chunk[:80],
+                    "original": chunk,
+                    "explanation": "Explanation pending...",
+                    "risk": "Risk pending..."
+                })
+                counter += 1
+
+    # leftover buffer
+    if buffer:
+        chunk = " ".join(buffer).strip()
+        if len(chunk) >= MIN_CLAUSE_LENGTH:
+            results.append({
+                "id": f"clause_{counter}",
+                "label": chunk[:80],
+                "original": chunk,
+                "explanation": "Explanation pending...",
+                "risk": "Risk pending..."
+            })
+
+    print(f"[UPLOAD] Line-based chunks generated: {len(results)}")
+    return results
+
     text = re.sub(r'^\s*\d+\s*$', '', text, flags=re.M)
     raw_chunks = re.split(r'(?=\n?\d+\.\s)', text)
 
